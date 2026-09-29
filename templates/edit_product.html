@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Edit Product - {{ shop_name }}</title>
+<style>
+  :root {
+    --navy: #14324f; --navy-dark: #0c2338; --teal: #0d9488; --teal-light: #14b8a6;
+    --bg: #f3f6f9; --card: #ffffff; --text: #1f2937; --muted: #6b7280;
+    --border: #e2e8f0; --error: #dc2626; --success: #16a34a;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; font-family: 'Segoe UI', system-ui, sans-serif; background: var(--bg); color: var(--text); }
+  .navbar { background: var(--navy); color: white; padding: 14px 24px; display: flex; align-items: center; justify-content: space-between; }
+  .navbar .brand { font-size: 19px; font-weight: 700; }
+  .navbar a { color: white; text-decoration: none; font-size: 14px; padding: 8px 14px; border-radius: 6px; }
+  .navbar a:hover { background: rgba(255,255,255,0.15); }
+  .container { max-width: 640px; margin: 0 auto; padding: 24px; }
+  .back-link { display: inline-block; margin-bottom: 16px; color: var(--navy); text-decoration: none; font-size: 14px; }
+  .card { background: var(--card); border-radius: 12px; padding: 28px; box-shadow: 0 1px 4px rgba(0,0,0,0.06); }
+  .card h2 { margin: 0 0 20px; color: var(--navy); font-size: 20px; }
+  .flash-message { padding: 12px 16px; border-radius: 8px; margin-bottom: 18px; font-size: 14px; }
+  .flash-message.error { background: #fef2f2; color: var(--error); border: 1px solid #fecaca; }
+  .flash-message.success { background: #f0fdf4; color: var(--success); border: 1px solid #bbf7d0; }
+  .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  label { display: block; font-size: 13px; font-weight: 600; margin-bottom: 6px; margin-top: 14px; }
+  input, select { width: 100%; padding: 10px 12px; border: 1.5px solid var(--border); border-radius: 8px; font-size: 14px; }
+  input:focus, select:focus { outline: none; border-color: var(--teal); }
+  button { margin-top: 22px; padding: 12px 24px; background: var(--teal); color: white; border: none; border-radius: 8px; font-size: 15px; font-weight: 600; cursor: pointer; }
+  button:hover { background: var(--teal-light); }
+  .delete-form { margin-top: 12px; display: inline; }
+  .delete-btn { background: var(--error); }
+  .delete-btn:hover { background: #b91c1c; }
+</style>
+</head>
+<body>
+  <div class="navbar">
+    <div class="brand">👓 {{ shop_name }}</div>
+    <a href="{{ url_for('home') }}">← Dashboard</a>
+  </div>
+  <div class="container">
+    <a class="back-link" href="{{ url_for('products') }}">← Products list</a>
+    <div class="card">
+      <h2>✏️ Edit Product</h2>
+      {% with messages = get_flashed_messages(with_categories=true) %}
+        {% for category, message in messages %}
+          <div class="flash-message {{ category }}">{{ message }}</div>
+        {% endfor %}
+      {% endwith %}
+      <form method="POST">
+        <label for="name">Product Name *</label>
+        <input type="text" id="name" name="name" required value="{{ product.name }}">
+
+        <div class="form-row">
+          <div>
+            <label for="category">Category *</label>
+            <select id="category" name="category" required>
+              {% for c in categories %}
+              <option value="{{ c }}" {% if c == product.category %}selected{% endif %}>{{ c }}</option>
+              {% endfor %}
+            </select>
+          </div>
+          <div>
+            <label for="brand">Brand</label>
+            <input list="brand-list" id="brand" name="brand" value="{{ product.brand or '' }}">
+            <datalist id="brand-list">
+              {% for b in brands %}
+              <option value="{{ b }}">
+              {% endfor %}
+            </datalist>
+          </div>
+        </div>
+
+        <label for="power_type">Power / Lens Type</label>
+        <input type="text" id="power_type" name="power_type" value="{{ product.power_type or '' }}">
+
+        <div class="form-row">
+          <div>
+            <label for="mrp">MRP (₹)</label>
+            <input type="number" id="mrp" name="mrp" step="0.01" min="0" value="{{ product.mrp }}">
+          </div>
+          <div>
+            <label for="selling_price">Selling Price (₹) *</label>
+            <input type="number" id="selling_price" name="selling_price" step="0.01" min="0" required value="{{ product.selling_price }}">
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div>
+            <label for="stock_qty">Stock Qty</label>
+            <input type="number" id="stock_qty" name="stock_qty" min="0" value="{{ product.stock_qty }}">
+          </div>
+          <div>
+            <label for="unit">Unit</label>
+            <input type="text" id="unit" name="unit" value="{{ product.unit }}">
+          </div>
+        </div>
+
+        <label for="barcode">Barcode</label>
+        <input type="text" id="barcode" name="barcode" value="{{ product.barcode or '' }}">
+
+        <button type="submit">Update Product</button>
+      </form>
+      <form class="delete-form" method="POST" action="{{ url_for('delete_product', product_id=product.id) }}"
+            onsubmit="return confirm('Kya aap sach mein is product ko delete karna chahte hain?');">
+        <button type="submit" class="delete-btn">🗑️ Delete Product</button>
+      </form>
+    </div>
+  </div>
+</body>
+</html>

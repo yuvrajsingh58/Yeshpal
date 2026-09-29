@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Login - {{ shop_name }}</title>
+<style>
+  :root {
+    --navy: #14324f;
+    --navy-dark: #0c2338;
+    --teal: #0d9488;
+    --teal-light: #14b8a6;
+    --bg: #f3f6f9;
+    --card: #ffffff;
+    --text: #1f2937;
+    --muted: #6b7280;
+    --border: #e2e8f0;
+    --error: #dc2626;
+    --success: #16a34a;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; font-family: 'Segoe UI', system-ui, sans-serif;
+    background: linear-gradient(135deg, var(--navy) 0%, var(--navy-dark) 100%);
+    min-height: 100vh; display: flex; align-items: center; justify-content: center;
+    padding: 20px;
+  }
+  .login-card {
+    background: var(--card); border-radius: 16px; padding: 40px 36px;
+    width: 100%; max-width: 380px; box-shadow: 0 20px 50px rgba(0,0,0,0.3);
+  }
+  .logo {
+    text-align: center; margin-bottom: 8px; font-size: 42px;
+  }
+  h1 {
+    text-align: center; color: var(--navy); font-size: 22px; margin: 0 0 4px;
+  }
+  .subtitle { text-align: center; color: var(--muted); font-size: 14px; margin-bottom: 28px; }
+  label { display: block; font-size: 13px; font-weight: 600; color: var(--text); margin-bottom: 6px; }
+  input {
+    width: 100%; padding: 11px 14px; border: 1.5px solid var(--border); border-radius: 8px;
+    font-size: 15px; margin-bottom: 18px; transition: border-color 0.2s;
+  }
+  input:focus { outline: none; border-color: var(--teal); }
+  button {
+    width: 100%; padding: 12px; background: var(--teal); color: white; border: none;
+    border-radius: 8px; font-size: 15px; font-weight: 600; cursor: pointer; transition: background 0.2s;
+  }
+  button:hover { background: var(--teal-light); }
+  .flash-message {
+    padding: 10px 14px; border-radius: 8px; margin-bottom: 18px; font-size: 14px;
+  }
+  .flash-message.error { background: #fef2f2; color: var(--error); border: 1px solid #fecaca; }
+  .flash-message.success { background: #f0fdf4; color: var(--success); border: 1px solid #bbf7d0; }
+</style>
+</head>
+<body>
+  <div class="login-card">
+    <div class="logo">👓</div>
+    <h1>{{ shop_name }}</h1>
+    <div class="subtitle">Data Management &amp; Billing System</div>
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% for category, message in messages %}
+        <div class="flash-message {{ category }}">{{ message }}</div>
+      {% endfor %}
+    {% endwith %}
+    <form method="POST">
+      <label for="username">Username</label>
+      <input type="text" id="username" name="username" required autofocus>
+      <label for="password">Password</label>
+      <input type="password" id="password" name="password" required>
+      <button type="submit">Login</button>
+    </form>
+  </div>
+</body>
+</html>

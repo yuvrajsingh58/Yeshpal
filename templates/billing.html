@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>New Bill - {{ shop_name }}</title>
+<style>
+  :root {
+    --navy: #14324f; --navy-dark: #0c2338; --teal: #0d9488; --teal-light: #14b8a6;
+    --bg: #f3f6f9; --card: #ffffff; --text: #1f2937; --muted: #6b7280;
+    --border: #e2e8f0; --error: #dc2626; --success: #16a34a;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; font-family: 'Segoe UI', system-ui, sans-serif; background: var(--bg); color: var(--text); }
+  .navbar { background: var(--navy); color: white; padding: 14px 24px; display: flex; align-items: center; justify-content: space-between; }
+  .navbar .brand { font-size: 19px; font-weight: 700; }
+  .navbar a { color: white; text-decoration: none; font-size: 14px; padding: 8px 14px; border-radius: 6px; }
+  .navbar a:hover { background: rgba(255,255,255,0.15); }
+  .container { max-width: 780px; margin: 0 auto; padding: 24px; }
+  .flash-message { padding: 12px 16px; border-radius: 8px; margin-bottom: 18px; font-size: 14px; }
+  .flash-message.error { background: #fef2f2; color: var(--error); border: 1px solid #fecaca; }
+  .flash-message.success { background: #f0fdf4; color: var(--success); border: 1px solid #bbf7d0; }
+  .card { background: var(--card); border-radius: 12px; padding: 28px; box-shadow: 0 1px 4px rgba(0,0,0,0.06); }
+  .card h2 { margin: 0 0 20px; color: var(--navy); font-size: 20px; }
+  .section-title { font-size: 13px; font-weight: 700; color: var(--navy); text-transform: uppercase; letter-spacing: 0.5px; margin: 24px 0 10px; border-bottom: 2px solid var(--border); padding-bottom: 6px; }
+  .section-title:first-of-type { margin-top: 0; }
+  .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  .form-row-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 14px; }
+  label { display: block; font-size: 13px; font-weight: 600; margin-bottom: 6px; margin-top: 14px; }
+  input, select, textarea { width: 100%; padding: 10px 12px; border: 1.5px solid var(--border); border-radius: 8px; font-size: 14px; font-family: inherit; }
+  input:focus, select:focus, textarea:focus { outline: none; border-color: var(--teal); }
+  .presc-table { width: 100%; border-collapse: collapse; margin-top: 8px; }
+  .presc-table th, .presc-table td { border: 1px solid var(--border); padding: 6px; text-align: center; }
+  .presc-table th { background: #f8fafc; font-size: 11px; color: var(--muted); text-transform: uppercase; }
+  .presc-table input { padding: 6px; text-align: center; font-size: 13px; }
+  .customer-note { font-size: 12px; margin-top: 6px; padding: 6px 10px; border-radius: 6px; display: none; }
+  .customer-note.found { display: block; background: #f0fdf4; color: var(--success); }
+  .customer-note.new { display: block; background: #eff6ff; color: #1d4ed8; }
+  .balance-preview { margin-top: 16px; padding: 14px; background: #f8fafc; border-radius: 8px; font-size: 15px; font-weight: 700; color: var(--navy); text-align: right; }
+  .stock-note { font-size: 12px; margin-top: 4px; }
+  .stock-note.ok { color: var(--success); }
+  .stock-note.low { color: #d97706; }
+  .stock-hint { font-size: 12px; color: var(--muted); margin-top: 8px; }
+  button.submit-btn { margin-top: 24px; padding: 13px 24px; background: var(--teal); color: white; border: none; border-radius: 8px; font-size: 15px; font-weight: 700; cursor: pointer; width: 100%; }
+  button.submit-btn:hover { background: var(--teal-light); }
+</style>
+</head>
+<body>
+  <div class="navbar">
+    <div class="brand">👓 {{ shop_name }}</div>
+    <a href="{{ url_for('home') }}">← Dashboard</a>
+  </div>
+  <div class="container">
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% for category, message in messages %}
+        <div class="flash-message {{ category }}">{{ message }}</div>
+      {% endfor %}
+    {% endwith %}
+    <div class="card">
+      <h2>🧾 New Bill / Order</h2>
+      <form method="POST" action="{{ url_for('create_bill') }}">
+
+        <div class="section-title">Customer &amp; Dates</div>
+        <div class="form-row">
+          <div>
+            <label for="customer_mobile">Mobile Number</label>
+            <input type="text" id="customer_mobile" name="customer_mobile" maxlength="15" autocomplete="off">
+            <div class="customer-note" id="customerNote"></div>
+          </div>
+          <div>
+            <label for="customer_name">Customer Name (M/s.) *</label>
+            <input type="text" id="customer_name" name="customer_name" required>
+          </div>
+        </div>
+        <div class="form-row">
+          <div>
+            <label for="bill_date">Date</label>
+            <input type="date" id="bill_date" name="bill_date" value="{{ today }}">
+          </div>
+          <div>
+            <label for="delivery_date">Delivery Date</label>
+            <input type="date" id="delivery_date" name="delivery_date">
+          </div>
+        </div>
+
+        <div class="section-title">👁️ Eye Prescription</div>
+        <table class="presc-table">
+          <tr><th></th><th colspan="3">R</th><th colspan="3">L</th></tr>
+          <tr><th></th><th>Sph.</th><th>Cyl.</th><th>Axis</th><th>Sph.</th><th>Cyl.</th><th>Axis</th></tr>
+          <tr>
+            <th>Distance</th>
+            <td><input type="text" name="dist_r_sph"></td>
+            <td><input type="text" name="dist_r_cyl"></td>
+            <td><input type="text" name="dist_r_axis"></td>
+            <td><input type="text" name="dist_l_sph"></td>
+            <td><input type="text" name="dist_l_cyl"></td>
+            <td><input type="text" name="dist_l_axis"></td>
+          </tr>
+          <tr>
+            <th>Reading</th>
+            <td><input type="text" name="read_r_sph"></td>
+            <td><input type="text" name="read_r_cyl"></td>
+            <td><input type="text" name="read_r_axis"></td>
+            <td><input type="text" name="read_l_sph"></td>
+            <td><input type="text" name="read_l_cyl"></td>
+            <td><input type="text" name="read_l_axis"></td>
+          </tr>
+        </table>
+
+        <div class="section-title">Frame &amp; Glass</div>
+        <div class="form-row">
+          <div>
+            <label for="frame_select">Frame</label>
+            <select id="frame_select" onchange="handleCatalogChange('frame')">
+              <option value="__manual__">✏️ Type manually (not in stock list)</option>
+              {% for p in products if p.category in ['Frame', 'Sunglasses'] %}
+              <option value="{{ p.id }}" data-name="{{ p.name }}{% if p.brand %} ({{ p.brand }}){% endif %}" data-stock="{{ p.stock_qty }}">
+                {{ p.name }}{% if p.brand %} ({{ p.brand }}){% endif %} — Stock: {{ p.stock_qty }}
+              </option>
+              {% endfor %}
+            </select>
+            <input type="hidden" id="frame_product_id" name="frame_product_id" value="">
+            <input type="text" id="frame" name="frame" placeholder="e.g. Sheet, Ray-Ban Metal" style="margin-top:8px;">
+            <div class="stock-note" id="frame_stock_note"></div>
+          </div>
+          <div>
+            <label for="glass_select">Glass / Lens</label>
+            <select id="glass_select" onchange="handleCatalogChange('glass')">
+              <option value="__manual__">✏️ Type manually (not in stock list)</option>
+              {% for p in products if p.category in ['Lens', 'Contact Lens'] %}
+              <option value="{{ p.id }}" data-name="{{ p.name }}{% if p.brand %} ({{ p.brand }}){% endif %}" data-stock="{{ p.stock_qty }}">
+                {{ p.name }}{% if p.brand %} ({{ p.brand }}){% endif %} — Stock: {{ p.stock_qty }}
+              </option>
+              {% endfor %}
+            </select>
+            <input type="hidden" id="glass_product_id" name="glass_product_id" value="">
+            <input type="text" id="glass" name="glass" placeholder="e.g. H.C., Crizal, Progressive" style="margin-top:8px;">
+            <div class="stock-note" id="glass_stock_note"></div>
+          </div>
+        </div>
+        <div class="stock-hint">💡 Catalog se select karoge to us product ka stock 1 kam ho jayega. Manually type karoge to stock touch nahi hoga.</div>
+
+        <div class="section-title">Payment</div>
+        <div class="form-row-3">
+          <div>
+            <label for="bill_type">Bill Type</label>
+            <select id="bill_type" name="bill_type">
+              <option value="Cash">Cash</option>
+              <option value="Credit">Credit / Udhaar</option>
+            </select>
+          </div>
+          <div>
+            <label for="total">Total (₹) *</label>
+            <input type="number" id="total" name="total" step="0.01" min="0.01" required>
+          </div>
+          <div>
+            <label for="advance">Advance (₹)</label>
+            <input type="number" id="advance" name="advance" step="0.01" min="0" value="0">
+          </div>
+        </div>
+
+        <div class="balance-preview" id="balancePreview">Balance: ₹0.00</div>
+
+        <button type="submit" class="submit-btn">Save &amp; Print Bill</button>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    const mobileInput = document.getElementById('customer_mobile');
+    const nameInput = document.getElementById('customer_name');
+    const note = document.getElementById('customerNote');
+    let lookupTimer;
+    mobileInput.addEventListener('input', () => {
+      clearTimeout(lookupTimer);
+      const mobile = mobileInput.value.trim();
+      if (mobile.length < 10) { note.className = 'customer-note'; return; }
+      lookupTimer = setTimeout(async () => {
+        try {
+          const res = await fetch(`/api/customer_lookup?mobile=${encodeURIComponent(mobile)}`);
+          const data = await res.json();
+          if (data.found) {
+            nameInput.value = data.name;
+            note.textContent = '✅ Purana customer mil gaya: ' + data.name;
+            note.className = 'customer-note found';
+          } else {
+            note.textContent = '🆕 Naya customer — details bharein';
+            note.className = 'customer-note new';
+          }
+        } catch (e) { /* ignore */ }
+      }, 400);
+    });
+
+    const totalInput = document.getElementById('total');
+    const advanceInput = document.getElementById('advance');
+    const balancePreview = document.getElementById('balancePreview');
+    function updateBalance() {
+      const total = parseFloat(totalInput.value) || 0;
+      const advance = parseFloat(advanceInput.value) || 0;
+      const balance = total - advance;
+      balancePreview.textContent = 'Balance: ₹' + balance.toFixed(2);
+    }
+    totalInput.addEventListener('input', updateBalance);
+    advanceInput.addEventListener('input', updateBalance);
+
+    function handleCatalogChange(kind) {
+      const select = document.getElementById(kind + '_select');
+      const hiddenId = document.getElementById(kind + '_product_id');
+      const textInput = document.getElementById(kind);
+      const note = document.getElementById(kind + '_stock_note');
+      const opt = select.options[select.selectedIndex];
+
+      if (select.value === '__manual__') {
+        hiddenId.value = '';
+        textInput.readOnly = false;
+        textInput.value = '';
+        textInput.focus();
+        note.textContent = '';
+        note.className = 'stock-note';
+      } else {
+        hiddenId.value = select.value;
+        textInput.value = opt.dataset.name;
+        textInput.readOnly = true;
+        const stock = parseInt(opt.dataset.stock, 10);
+        if (stock < 1) {
+          note.textContent = '⚠️ Stock khatam hai!';
+          note.className = 'stock-note low';
+        } else {
+          note.textContent = `✅ Bill save hone par stock ${stock} se ${stock - 1} ho jayega`;
+          note.className = 'stock-note ok';
+        }
+      }
+    }
+  </script>
+</body>
+</html>

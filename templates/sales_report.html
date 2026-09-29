@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sales Report - {{ shop_name }}</title>
+<style>
+  :root {
+    --navy: #14324f; --teal: #0d9488; --teal-light: #14b8a6; --bg: #f3f6f9; --card: #ffffff;
+    --text: #1f2937; --muted: #6b7280; --border: #e2e8f0; --error: #dc2626; --success: #16a34a;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; font-family: 'Segoe UI', system-ui, sans-serif; background: var(--bg); color: var(--text); }
+  .navbar { background: var(--navy); color: white; padding: 14px 24px; display: flex; align-items: center; justify-content: space-between; }
+  .navbar .brand { font-size: 19px; font-weight: 700; }
+  .navbar a { color: white; text-decoration: none; font-size: 14px; padding: 8px 14px; border-radius: 6px; }
+  .container { max-width: 1000px; margin: 0 auto; padding: 24px; }
+  h2 { color: var(--navy); margin-top: 0; }
+  .filter-form { display: flex; gap: 10px; margin-bottom: 18px; flex-wrap: wrap; align-items: end; }
+  .filter-form div { display: flex; flex-direction: column; }
+  .filter-form label { font-size: 12px; font-weight: 600; margin-bottom: 4px; }
+  .filter-form input { padding: 9px 12px; border: 1.5px solid var(--border); border-radius: 8px; }
+  .filter-form button { padding: 9px 18px; background: var(--navy); color: white; border: none; border-radius: 8px; cursor: pointer; }
+  .filter-form a.export-btn { padding: 9px 18px; background: var(--teal); color: white; border-radius: 8px; text-decoration: none; font-size: 14px; font-weight: 600; }
+  .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 14px; margin-bottom: 20px; }
+  .stat-card { background: var(--card); border-radius: 12px; padding: 16px; box-shadow: 0 1px 4px rgba(0,0,0,0.06); border-left: 4px solid var(--teal); }
+  .stat-card .label { font-size: 12px; color: var(--muted); }
+  .stat-card .value { font-size: 20px; font-weight: 700; color: var(--navy); }
+  .card { background: var(--card); border-radius: 12px; box-shadow: 0 1px 4px rgba(0,0,0,0.06); overflow-x: auto; }
+  table { width: 100%; border-collapse: collapse; font-size: 14px; min-width: 600px; }
+  th, td { text-align: left; padding: 10px 12px; border-bottom: 1px solid var(--border); }
+  th { color: var(--muted); font-weight: 600; font-size: 12px; text-transform: uppercase; background: #fafbfc; }
+  .empty-note { text-align: center; padding: 40px; color: var(--muted); }
+</style>
+</head>
+<body>
+  <div class="navbar">
+    <div class="brand">👓 {{ shop_name }}</div>
+    <a href="{{ url_for('home') }}">← Dashboard</a>
+  </div>
+  <div class="container">
+    <h2>📊 Sales Report</h2>
+    <form class="filter-form" method="GET">
+      <div><label for="start">From</label><input type="date" id="start" name="start" value="{{ start }}"></div>
+      <div><label for="end">To</label><input type="date" id="end" name="end" value="{{ end }}"></div>
+      <button type="submit">Filter</button>
+      <a class="export-btn" href="{{ url_for('export_sales_report', start=start, end=end) }}">⬇️ Export CSV</a>
+    </form>
+
+    <div class="stats-grid">
+      <div class="stat-card"><div class="label">Total Sales</div><div class="value">₹{{ "%.2f"|format(total_sales) }}</div></div>
+      <div class="stat-card"><div class="label">Cash Sales</div><div class="value">₹{{ "%.2f"|format(cash_sales) }}</div></div>
+      <div class="stat-card"><div class="label">Credit Sales</div><div class="value">₹{{ "%.2f"|format(credit_sales) }}</div></div>
+      <div class="stat-card"><div class="label">Total Bills</div><div class="value">{{ bills|length }}</div></div>
+    </div>
+
+    <div class="card">
+      {% if bills %}
+      <table>
+        <tr><th>S.No.</th><th>Date</th><th>Customer</th><th>Type</th><th>Total</th></tr>
+        {% for b in bills %}
+        <tr>
+          <td>{{ b.sno or b.bill_number }}</td>
+          <td>{{ b.bill_date }}</td>
+          <td>{{ b.customer_name or 'Walk-in' }}</td>
+          <td>{{ b.bill_type }}</td>
+          <td>₹{{ "%.2f"|format(b.total) }}</td>
+        </tr>
+        {% endfor %}
+      </table>
+      {% else %}
+      <div class="empty-note">Is date range mein koi bill nahi mila.</div>
+      {% endif %}
+    </div>
+  </div>
+</body>
+</html>

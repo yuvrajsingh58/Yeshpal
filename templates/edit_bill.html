@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Edit Bill - {{ shop_name }}</title>
+<style>
+  :root {
+    --navy: #14324f; --teal: #0d9488; --teal-light: #14b8a6; --bg: #f3f6f9; --card: #ffffff;
+    --text: #1f2937; --muted: #6b7280; --border: #e2e8f0; --error: #dc2626; --success: #16a34a;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; font-family: 'Segoe UI', system-ui, sans-serif; background: var(--bg); color: var(--text); }
+  .navbar { background: var(--navy); color: white; padding: 14px 24px; display: flex; align-items: center; justify-content: space-between; }
+  .navbar .brand { font-size: 19px; font-weight: 700; }
+  .navbar a { color: white; text-decoration: none; font-size: 14px; padding: 8px 14px; border-radius: 6px; }
+  .container { max-width: 780px; margin: 0 auto; padding: 24px; }
+  .back-link { display: inline-block; margin-bottom: 16px; color: var(--navy); text-decoration: none; font-size: 14px; }
+  .card { background: var(--card); border-radius: 12px; padding: 28px; box-shadow: 0 1px 4px rgba(0,0,0,0.06); }
+  .card h2 { margin: 0 0 20px; color: var(--navy); font-size: 20px; }
+  .flash-message { padding: 12px 16px; border-radius: 8px; margin-bottom: 18px; font-size: 14px; }
+  .flash-message.error { background: #fef2f2; color: var(--error); border: 1px solid #fecaca; }
+  .flash-message.success { background: #f0fdf4; color: var(--success); border: 1px solid #bbf7d0; }
+  .section-title { font-size: 13px; font-weight: 700; color: var(--navy); text-transform: uppercase; letter-spacing: 0.5px; margin: 24px 0 10px; border-bottom: 2px solid var(--border); padding-bottom: 6px; }
+  .section-title:first-of-type { margin-top: 0; }
+  .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  .form-row-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 14px; }
+  label { display: block; font-size: 13px; font-weight: 600; margin-bottom: 6px; margin-top: 14px; }
+  input, select { width: 100%; padding: 10px 12px; border: 1.5px solid var(--border); border-radius: 8px; font-size: 14px; }
+  .presc-table { width: 100%; border-collapse: collapse; margin-top: 8px; }
+  .presc-table th, .presc-table td { border: 1px solid var(--border); padding: 6px; text-align: center; }
+  .presc-table th { background: #f8fafc; font-size: 11px; color: var(--muted); text-transform: uppercase; }
+  .presc-table input { padding: 6px; text-align: center; font-size: 13px; }
+  button.submit-btn { margin-top: 24px; padding: 13px 24px; background: var(--teal); color: white; border: none; border-radius: 8px; font-size: 15px; font-weight: 700; cursor: pointer; width: 100%; }
+  button.submit-btn:hover { background: var(--teal-light); }
+  .stock-note { font-size: 12px; margin-top: 4px; }
+  .stock-note.ok { color: var(--success); }
+  .stock-note.low { color: #d97706; }
+  .stock-hint { font-size: 12px; color: var(--muted); margin-top: 8px; }
+</style>
+</head>
+<body>
+  <div class="navbar">
+    <div class="brand">👓 {{ shop_name }}</div>
+    <a href="{{ url_for('home') }}">← Dashboard</a>
+  </div>
+  <div class="container">
+    <a class="back-link" href="{{ url_for('view_bill', bill_id=bill.id) }}">← Back to bill</a>
+    <div class="card">
+      <h2>✏️ Edit Bill — S.No. {{ bill.sno or bill.bill_number }}</h2>
+      {% with messages = get_flashed_messages(with_categories=true) %}
+        {% for category, message in messages %}
+          <div class="flash-message {{ category }}">{{ message }}</div>
+        {% endfor %}
+      {% endwith %}
+      <form method="POST">
+        <div class="section-title">Customer &amp; Dates</div>
+        <div class="form-row">
+          <div>
+            <label for="customer_name">Customer Name</label>
+            <input type="text" id="customer_name" name="customer_name" value="{{ bill.customer_name or '' }}">
+          </div>
+          <div>
+            <label for="customer_mobile">Mobile</label>
+            <input type="text" id="customer_mobile" name="customer_mobile" value="{{ bill.customer_mobile or '' }}">
+          </div>
+        </div>
+        <label for="delivery_date">Delivery Date</label>
+        <input type="date" id="delivery_date" name="delivery_date" value="{{ bill.delivery_date or '' }}">
+
+        <div class="section-title">👁️ Eye Prescription</div>
+        <table class="presc-table">
+          <tr><th></th><th colspan="3">R</th><th colspan="3">L</th></tr>
+          <tr><th></th><th>Sph.</th><th>Cyl.</th><th>Axis</th><th>Sph.</th><th>Cyl.</th><th>Axis</th></tr>
+          <tr>
+            <th>Distance</th>
+            <td><input type="text" name="dist_r_sph" value="{{ bill.dist_r_sph or '' }}"></td>
+            <td><input type="text" name="dist_r_cyl" value="{{ bill.dist_r_cyl or '' }}"></td>
+            <td><input type="text" name="dist_r_axis" value="{{ bill.dist_r_axis or '' }}"></td>
+            <td><input type="text" name="dist_l_sph" value="{{ bill.dist_l_sph or '' }}"></td>
+            <td><input type="text" name="dist_l_cyl" value="{{ bill.dist_l_cyl or '' }}"></td>
+            <td><input type="text" name="dist_l_axis" value="{{ bill.dist_l_axis or '' }}"></td>
+          </tr>
+          <tr>
+            <th>Reading</th>
+            <td><input type="text" name="read_r_sph" value="{{ bill.read_r_sph or '' }}"></td>
+            <td><input type="text" name="read_r_cyl" value="{{ bill.read_r_cyl or '' }}"></td>
+            <td><input type="text" name="read_r_axis" value="{{ bill.read_r_axis or '' }}"></td>
+            <td><input type="text" name="read_l_sph" value="{{ bill.read_l_sph or '' }}"></td>
+            <td><input type="text" name="read_l_cyl" value="{{ bill.read_l_cyl or '' }}"></td>
+            <td><input type="text" name="read_l_axis" value="{{ bill.read_l_axis or '' }}"></td>
+          </tr>
+        </table>
+
+        <div class="section-title">Frame &amp; Glass</div>
+        <div class="form-row">
+          <div>
+            <label for="frame_select">Frame</label>
+            <select id="frame_select" onchange="handleCatalogChange('frame')">
+              <option value="__manual__" {% if not bill.frame_product_id %}selected{% endif %}>✏️ Type manually</option>
+              {% for p in products if p.category in ['Frame', 'Sunglasses'] %}
+              <option value="{{ p.id }}" data-name="{{ p.name }}{% if p.brand %} ({{ p.brand }}){% endif %}"
+                data-stock="{{ p.stock_qty }}" {% if bill.frame_product_id == p.id %}selected{% endif %}>
+                {{ p.name }}{% if p.brand %} ({{ p.brand }}){% endif %} — Stock: {{ p.stock_qty }}
+              </option>
+              {% endfor %}
+            </select>
+            <input type="hidden" id="frame_product_id" name="frame_product_id" value="{{ bill.frame_product_id or '' }}">
+            <input type="text" id="frame" name="frame" value="{{ bill.frame or '' }}"
+              {% if bill.frame_product_id %}readonly{% endif %} style="margin-top:8px;">
+            <div class="stock-note" id="frame_stock_note"></div>
+          </div>
+          <div>
+            <label for="glass_select">Glass / Lens</label>
+            <select id="glass_select" onchange="handleCatalogChange('glass')">
+              <option value="__manual__" {% if not bill.glass_product_id %}selected{% endif %}>✏️ Type manually</option>
+              {% for p in products if p.category in ['Lens', 'Contact Lens'] %}
+              <option value="{{ p.id }}" data-name="{{ p.name }}{% if p.brand %} ({{ p.brand }}){% endif %}"
+                data-stock="{{ p.stock_qty }}" {% if bill.glass_product_id == p.id %}selected{% endif %}>
+                {{ p.name }}{% if p.brand %} ({{ p.brand }}){% endif %} — Stock: {{ p.stock_qty }}
+              </option>
+              {% endfor %}
+            </select>
+            <input type="hidden" id="glass_product_id" name="glass_product_id" value="{{ bill.glass_product_id or '' }}">
+            <input type="text" id="glass" name="glass" value="{{ bill.glass or '' }}"
+              {% if bill.glass_product_id %}readonly{% endif %} style="margin-top:8px;">
+            <div class="stock-note" id="glass_stock_note"></div>
+          </div>
+        </div>
+        <div class="stock-hint">💡 Catalog badalne par purane product ka stock wapas ho jayega aur naye ka kam ho jayega.</div>
+
+        <div class="section-title">Payment</div>
+        <div class="form-row-3">
+          <div>
+            <label for="bill_type">Bill Type</label>
+            <select id="bill_type" name="bill_type">
+              <option value="Cash" {% if bill.bill_type == 'Cash' %}selected{% endif %}>Cash</option>
+              <option value="Credit" {% if bill.bill_type == 'Credit' %}selected{% endif %}>Credit / Udhaar</option>
+            </select>
+          </div>
+          <div>
+            <label for="total">Total (₹)</label>
+            <input type="number" id="total" name="total" step="0.01" min="0.01" value="{{ bill.total }}" required>
+          </div>
+          <div>
+            <label for="advance">Advance (₹)</label>
+            <input type="number" id="advance" name="advance" step="0.01" min="0" value="{{ bill.advance }}">
+          </div>
+        </div>
+
+        <button type="submit" class="submit-btn">Update Bill</button>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    function handleCatalogChange(kind) {
+      const select = document.getElementById(kind + '_select');
+      const hiddenId = document.getElementById(kind + '_product_id');
+      const textInput = document.getElementById(kind);
+      const note = document.getElementById(kind + '_stock_note');
+      const opt = select.options[select.selectedIndex];
+
+      if (select.value === '__manual__') {
+        hiddenId.value = '';
+        textInput.readOnly = false;
+        note.textContent = '';
+        note.className = 'stock-note';
+      } else {
+        hiddenId.value = select.value;
+        textInput.value = opt.dataset.name;
+        textInput.readOnly = true;
+        const stock = parseInt(opt.dataset.stock, 10);
+        if (stock < 1) {
+          note.textContent = '⚠️ Stock khatam hai!';
+          note.className = 'stock-note low';
+        } else {
+          note.textContent = `✅ Save hone par stock ${stock} se ${stock - 1} ho jayega`;
+          note.className = 'stock-note ok';
+        }
+      }
+    }
+  </script>
+</body>
+</html>

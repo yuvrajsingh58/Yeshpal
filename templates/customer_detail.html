@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>{{ customer.name }} - {{ shop_name }}</title>
+<style>
+  :root {
+    --navy: #14324f; --teal: #0d9488; --teal-light: #14b8a6; --bg: #f3f6f9; --card: #ffffff;
+    --text: #1f2937; --muted: #6b7280; --border: #e2e8f0; --error: #dc2626; --success: #16a34a;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; font-family: 'Segoe UI', system-ui, sans-serif; background: var(--bg); color: var(--text); }
+  .navbar { background: var(--navy); color: white; padding: 14px 24px; display: flex; align-items: center; justify-content: space-between; }
+  .navbar .brand { font-size: 19px; font-weight: 700; }
+  .navbar a { color: white; text-decoration: none; font-size: 14px; padding: 8px 14px; border-radius: 6px; }
+  .container { max-width: 900px; margin: 0 auto; padding: 24px; }
+  .back-link { display: inline-block; margin-bottom: 16px; color: var(--navy); text-decoration: none; font-size: 14px; }
+  .flash-message { padding: 12px 16px; border-radius: 8px; margin-bottom: 18px; font-size: 14px; }
+  .flash-message.error { background: #fef2f2; color: var(--error); border: 1px solid #fecaca; }
+  .flash-message.success { background: #f0fdf4; color: var(--success); border: 1px solid #bbf7d0; }
+  .header-card { background: var(--card); border-radius: 12px; padding: 22px; box-shadow: 0 1px 4px rgba(0,0,0,0.06); margin-bottom: 20px; display: flex; justify-content: space-between; flex-wrap: wrap; gap: 16px; }
+  .header-card h2 { margin: 0 0 6px; color: var(--navy); }
+  .header-card .meta { color: var(--muted); font-size: 14px; }
+  .balance-box { text-align: right; }
+  .balance-box .label { font-size: 12px; color: var(--muted); text-transform: uppercase; }
+  .balance-box .amount { font-size: 26px; font-weight: 700; color: var(--error); }
+  .balance-box .amount.zero { color: var(--success); }
+  .actions { display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap; }
+  .actions a, .actions button { text-decoration: none; padding: 9px 16px; border-radius: 8px; font-size: 13px; font-weight: 600; border: none; cursor: pointer; }
+  .actions .edit { background: var(--navy); color: white; }
+  .actions .presc { background: #0369a1; color: white; }
+  .actions .pay { background: var(--teal); color: white; }
+  .panel { background: var(--card); border-radius: 12px; padding: 20px; box-shadow: 0 1px 4px rgba(0,0,0,0.06); margin-bottom: 20px; }
+  .panel h3 { margin: 0 0 14px; color: var(--navy); font-size: 16px; }
+  table { width: 100%; border-collapse: collapse; font-size: 14px; }
+  th, td { text-align: left; padding: 9px 8px; border-bottom: 1px solid var(--border); }
+  th { color: var(--muted); font-weight: 600; font-size: 12px; text-transform: uppercase; }
+  a.bill-link { color: var(--navy); text-decoration: none; font-weight: 600; }
+  .empty-note { color: var(--muted); font-size: 14px; padding: 10px 0; }
+  .pay-form { display: flex; gap: 8px; margin-top: 14px; flex-wrap: wrap; }
+  .pay-form input { padding: 9px 12px; border: 1.5px solid var(--border); border-radius: 8px; font-size: 14px; }
+  .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.4); align-items: center; justify-content: center; z-index: 200; }
+  .modal-overlay.open { display: flex; }
+  .modal { background: white; border-radius: 12px; padding: 24px; width: 90%; max-width: 380px; }
+  .modal h3 { margin: 0 0 16px; color: var(--navy); }
+  .modal label { display: block; font-size: 13px; font-weight: 600; margin-bottom: 6px; margin-top: 10px; }
+  .modal input { width: 100%; padding: 9px 12px; border: 1.5px solid var(--border); border-radius: 8px; }
+  .modal-buttons { display: flex; gap: 10px; margin-top: 18px; }
+  .modal-buttons button { flex: 1; padding: 10px; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; }
+  .modal-buttons .cancel { background: var(--border); }
+  .modal-buttons .submit { background: var(--teal); color: white; }
+</style>
+</head>
+<body>
+  <div class="navbar">
+    <div class="brand">👓 {{ shop_name }}</div>
+    <a href="{{ url_for('home') }}">← Dashboard</a>
+  </div>
+  <div class="container">
+    <a class="back-link" href="{{ url_for('customers') }}">← Customers list</a>
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% for category, message in messages %}
+        <div class="flash-message {{ category }}">{{ message }}</div>
+      {% endfor %}
+    {% endwith %}
+
+    <div class="header-card">
+      <div>
+        <h2>{{ customer.name }}</h2>
+        <div class="meta">📱 {{ customer.mobile or 'No mobile' }}{% if customer.address %} &nbsp;|&nbsp; 📍 {{ customer.address }}{% endif %}</div>
+      </div>
+      <div class="balance-box">
+        <div class="label">Udhaar Balance</div>
+        <div class="amount {% if balance <= 0 %}zero{% endif %}">₹{{ "%.2f"|format(balance) }}</div>
+      </div>
+    </div>
+
+    <div class="actions">
+      <a class="edit" href="{{ url_for('edit_customer', customer_id=customer.id) }}">✏️ Edit Customer</a>
+      <a class="presc" href="{{ url_for('add_prescription', customer_id=customer.id) }}">👁️ Add Prescription</a>
+      {% if balance > 0 %}
+      <button class="pay" onclick="document.getElementById('payModal').classList.add('open')">💰 Record Payment</button>
+      {% endif %}
+    </div>
+
+    <div class="panel">
+      <h3>🧾 Bills / Orders</h3>
+      {% if bills %}
+      <table>
+        <tr><th>S.No.</th><th>Date</th><th>Type</th><th>Total</th><th>Advance</th><th>Balance</th></tr>
+        {% for b in bills %}
+        <tr>
+          <td><a class="bill-link" href="{{ url_for('view_bill', bill_id=b.id) }}">{{ b.sno or b.bill_number }}</a></td>
+          <td>{{ b.bill_date }}</td>
+          <td>{{ b.bill_type }}</td>
+          <td>₹{{ "%.2f"|format(b.total) }}</td>
+          <td>₹{{ "%.2f"|format(b.advance) }}</td>
+          <td>₹{{ "%.2f"|format(b.total - b.advance) }}</td>
+        </tr>
+        {% endfor %}
+      </table>
+      {% else %}
+      <div class="empty-note">Koi bill nahi hai abhi tak.</div>
+      {% endif %}
+    </div>
+
+    <div class="panel">
+      <h3>👁️ Prescription History</h3>
+      {% if prescriptions %}
+      <table>
+        <tr><th>Date</th><th>R (Sph/Cyl/Axis)</th><th>L (Sph/Cyl/Axis)</th><th>PD</th></tr>
+        {% for p in prescriptions %}
+        <tr>
+          <td>{{ p.presc_date }}</td>
+          <td>{{ p.right_sph or '-' }} / {{ p.right_cyl or '-' }} / {{ p.right_axis or '-' }}</td>
+          <td>{{ p.left_sph or '-' }} / {{ p.left_cyl or '-' }} / {{ p.left_axis or '-' }}</td>
+          <td>{{ p.pd or '-' }}</td>
+        </tr>
+        {% endfor %}
+      </table>
+      {% else %}
+      <div class="empty-note">Koi prescription record nahi hai.</div>
+      {% endif %}
+    </div>
+
+    <div class="panel">
+      <h3>💰 Payment History</h3>
+      {% if payments %}
+      <table>
+        <tr><th>Date</th><th>Amount</th><th>Notes</th></tr>
+        {% for p in payments %}
+        <tr><td>{{ p.payment_date }}</td><td>₹{{ "%.2f"|format(p.amount) }}</td><td>{{ p.notes or '-' }}</td></tr>
+        {% endfor %}
+      </table>
+      {% else %}
+      <div class="empty-note">Koi payment record nahi hai.</div>
+      {% endif %}
+    </div>
+  </div>
+
+  <div class="modal-overlay" id="payModal">
+    <div class="modal">
+      <h3>💰 Record Payment</h3>
+      <form method="POST" action="{{ url_for('add_payment', customer_id=customer.id) }}">
+        <label for="amount">Amount (₹)</label>
+        <input type="number" id="amount" name="amount" step="0.01" min="0.01" required>
+        <label for="notes">Notes (optional)</label>
+        <input type="text" id="notes" name="notes" placeholder="e.g. Cash, UPI">
+        <div class="modal-buttons">
+          <button type="button" class="cancel" onclick="document.getElementById('payModal').classList.remove('open')">Cancel</button>
+          <button type="submit" class="submit">Save Payment</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</body>
+</html>

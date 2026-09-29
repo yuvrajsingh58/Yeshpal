@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dashboard - {{ shop_name }}</title>
+<style>
+  :root {
+    --navy: #14324f; --navy-dark: #0c2338; --teal: #0d9488; --teal-light: #14b8a6;
+    --bg: #f3f6f9; --card: #ffffff; --text: #1f2937; --muted: #6b7280;
+    --border: #e2e8f0; --error: #dc2626; --success: #16a34a; --warn: #d97706;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; font-family: 'Segoe UI', system-ui, sans-serif; background: var(--bg); color: var(--text); }
+  .navbar {
+    background: var(--navy); color: white; padding: 14px 24px; display: flex;
+    align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 100;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+  }
+  .navbar .brand { font-size: 19px; font-weight: 700; display: flex; align-items: center; gap: 8px; }
+  .navbar .nav-links { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+  .navbar a {
+    color: white; text-decoration: none; font-size: 14px; padding: 8px 14px;
+    border-radius: 6px; transition: background 0.2s;
+  }
+  .navbar a:hover { background: rgba(255,255,255,0.15); }
+  .navbar a.logout { background: var(--error); }
+  .navbar a.logout:hover { background: #b91c1c; }
+  .container { max-width: 1200px; margin: 0 auto; padding: 24px; }
+  .flash-message { padding: 12px 16px; border-radius: 8px; margin-bottom: 18px; font-size: 14px; }
+  .flash-message.error { background: #fef2f2; color: var(--error); border: 1px solid #fecaca; }
+  .flash-message.success { background: #f0fdf4; color: var(--success); border: 1px solid #bbf7d0; }
+  .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-bottom: 24px; }
+  .stat-card {
+    background: var(--card); border-radius: 12px; padding: 20px; box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+    border-left: 4px solid var(--teal);
+  }
+  .stat-card .label { font-size: 13px; color: var(--muted); margin-bottom: 6px; }
+  .stat-card .value { font-size: 24px; font-weight: 700; color: var(--navy); }
+  .quick-actions { display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 28px; }
+  .quick-actions a {
+    background: var(--teal); color: white; text-decoration: none; padding: 12px 20px;
+    border-radius: 8px; font-size: 14px; font-weight: 600; transition: background 0.2s;
+  }
+  .quick-actions a:hover { background: var(--teal-light); }
+  .quick-actions a.secondary { background: var(--navy); }
+  .quick-actions a.secondary:hover { background: var(--navy-dark); }
+  .panels { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 20px; }
+  .panel { background: var(--card); border-radius: 12px; padding: 20px; box-shadow: 0 1px 4px rgba(0,0,0,0.06); }
+  .panel h3 { margin: 0 0 14px; font-size: 16px; color: var(--navy); display: flex; align-items: center; gap: 8px; }
+  table { width: 100%; border-collapse: collapse; font-size: 14px; }
+  th, td { text-align: left; padding: 8px 6px; border-bottom: 1px solid var(--border); }
+  th { color: var(--muted); font-weight: 600; font-size: 12px; text-transform: uppercase; }
+  .badge { padding: 2px 8px; border-radius: 12px; font-size: 12px; font-weight: 600; }
+  .badge.low { background: #fef3c7; color: var(--warn); }
+  .badge.balance { background: #fef2f2; color: var(--error); }
+  .empty-note { color: var(--muted); font-size: 14px; padding: 12px 0; text-align: center; }
+</style>
+</head>
+<body>
+  <div class="navbar">
+    <div class="brand">👓 {{ shop_name }}</div>
+    <div class="nav-links">
+      <a href="{{ url_for('home') }}">Dashboard</a>
+      <a href="{{ url_for('billing') }}">Billing</a>
+      <a href="{{ url_for('products') }}">Products</a>
+      <a href="{{ url_for('stock') }}">Stock</a>
+      <a href="{{ url_for('customers') }}">Customers</a>
+      <a href="{{ url_for('bills') }}">Bills</a>
+      <a href="{{ url_for('sales_report') }}">Sales Report</a>
+      <a href="{{ url_for('change_password') }}">Change Password</a>
+      <a href="{{ url_for('logout') }}" class="logout">Logout</a>
+    </div>
+  </div>
+  <div class="container">
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% for category, message in messages %}
+        <div class="flash-message {{ category }}">{{ message }}</div>
+      {% endfor %}
+    {% endwith %}
+
+    <div class="quick-actions">
+      <a href="{{ url_for('billing') }}">🧾 New Bill</a>
+      <a href="{{ url_for('add_product_page') }}" class="secondary">➕ Add Product</a>
+      <a href="{{ url_for('add_customer') }}" class="secondary">👤 Add Customer</a>
+    </div>
+
+    <div class="stats-grid">
+      <div class="stat-card"><div class="label">Today's Sales</div><div class="value">₹{{ "%.2f"|format(today_sales) }}</div></div>
+      <div class="stat-card"><div class="label">This Week</div><div class="value">₹{{ "%.2f"|format(week_sales) }}</div></div>
+      <div class="stat-card"><div class="label">This Month</div><div class="value">₹{{ "%.2f"|format(month_sales) }}</div></div>
+      <div class="stat-card"><div class="label">Total Products</div><div class="value">{{ total_products }}</div></div>
+      <div class="stat-card"><div class="label">Total Customers</div><div class="value">{{ total_customers }}</div></div>
+    </div>
+
+    <div class="panels">
+      <div class="panel">
+        <h3>⚠️ Low Stock Alert</h3>
+        {% if low_stock %}
+        <table>
+          <tr><th>Product</th><th>Category</th><th>Stock</th></tr>
+          {% for p in low_stock %}
+          <tr><td>{{ p.name }}</td><td>{{ p.category }}</td><td><span class="badge low">{{ p.stock_qty }} {{ p.unit }}</span></td></tr>
+          {% endfor %}
+        </table>
+        {% else %}
+        <div class="empty-note">Sab products ka stock theek hai 👍</div>
+        {% endif %}
+      </div>
+
+      <div class="panel">
+        <h3>🏆 Best Sellers (30 din)</h3>
+        {% if best_sellers %}
+        <table>
+          <tr><th>Product</th><th>Qty Sold</th></tr>
+          {% for b in best_sellers %}
+          <tr><td>{{ b.product_name }}</td><td>{{ b.total_qty }}</td></tr>
+          {% endfor %}
+        </table>
+        {% else %}
+        <div class="empty-note">Abhi tak koi sales data nahi hai.</div>
+        {% endif %}
+      </div>
+
+      <div class="panel">
+        <h3>📒 Sabse Zyada Udhaar</h3>
+        {% if top_udhaar %}
+        <table>
+          <tr><th>Customer</th><th>Mobile</th><th>Balance</th></tr>
+          {% for c in top_udhaar %}
+          <tr>
+            <td><a href="{{ url_for('customer_detail', customer_id=c.id) }}">{{ c.name }}</a></td>
+            <td>{{ c.mobile or '-' }}</td>
+            <td><span class="badge balance">₹{{ "%.2f"|format(c.balance) }}</span></td>
+          </tr>
+          {% endfor %}
+        </table>
+        {% else %}
+        <div class="empty-note">Koi pending udhaar nahi hai 🎉</div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</body>
+</html>

@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Add Prescription - {{ shop_name }}</title>
+<style>
+  :root {
+    --navy: #14324f; --teal: #0d9488; --teal-light: #14b8a6; --bg: #f3f6f9; --card: #ffffff;
+    --text: #1f2937; --muted: #6b7280; --border: #e2e8f0; --error: #dc2626; --success: #16a34a;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; font-family: 'Segoe UI', system-ui, sans-serif; background: var(--bg); color: var(--text); }
+  .navbar { background: var(--navy); color: white; padding: 14px 24px; display: flex; align-items: center; justify-content: space-between; }
+  .navbar .brand { font-size: 19px; font-weight: 700; }
+  .navbar a { color: white; text-decoration: none; font-size: 14px; padding: 8px 14px; border-radius: 6px; }
+  .container { max-width: 640px; margin: 0 auto; padding: 24px; }
+  .back-link { display: inline-block; margin-bottom: 16px; color: var(--navy); text-decoration: none; font-size: 14px; }
+  .card { background: var(--card); border-radius: 12px; padding: 28px; box-shadow: 0 1px 4px rgba(0,0,0,0.06); }
+  .card h2 { margin: 0 0 4px; color: var(--navy); font-size: 20px; }
+  .card .sub { color: var(--muted); font-size: 14px; margin-bottom: 20px; }
+  .flash-message { padding: 12px 16px; border-radius: 8px; margin-bottom: 18px; font-size: 14px; }
+  .flash-message.error { background: #fef2f2; color: var(--error); border: 1px solid #fecaca; }
+  table.presc-table { width: 100%; border-collapse: collapse; margin-top: 12px; }
+  table.presc-table th, table.presc-table td { border: 1px solid var(--border); padding: 8px; text-align: center; }
+  table.presc-table th { background: #f8fafc; font-size: 12px; color: var(--muted); text-transform: uppercase; }
+  table.presc-table input { width: 100%; padding: 6px; border: 1px solid var(--border); border-radius: 4px; text-align: center; }
+  label.field-label { display: block; font-size: 13px; font-weight: 600; margin-bottom: 6px; margin-top: 16px; }
+  input.wide, textarea { width: 100%; padding: 10px 12px; border: 1.5px solid var(--border); border-radius: 8px; font-size: 14px; font-family: inherit; }
+  button { margin-top: 22px; padding: 12px 24px; background: var(--teal); color: white; border: none; border-radius: 8px; font-size: 15px; font-weight: 600; cursor: pointer; }
+  button:hover { background: var(--teal-light); }
+</style>
+</head>
+<body>
+  <div class="navbar">
+    <div class="brand">👓 {{ shop_name }}</div>
+    <a href="{{ url_for('home') }}">← Dashboard</a>
+  </div>
+  <div class="container">
+    <a class="back-link" href="{{ url_for('customer_detail', customer_id=customer.id) }}">← {{ customer.name }}</a>
+    <div class="card">
+      <h2>👁️ Add Prescription</h2>
+      <div class="sub">Customer: {{ customer.name }}</div>
+      {% with messages = get_flashed_messages(with_categories=true) %}
+        {% for category, message in messages %}
+          <div class="flash-message {{ category }}">{{ message }}</div>
+        {% endfor %}
+      {% endwith %}
+      <form method="POST">
+        <table class="presc-table">
+          <tr><th></th><th colspan="3">R (Right)</th><th colspan="3">L (Left)</th></tr>
+          <tr><th></th><th>Sph.</th><th>Cyl.</th><th>Axis</th><th>Sph.</th><th>Cyl.</th><th>Axis</th></tr>
+          <tr>
+            <th>Distance</th>
+            <td><input type="text" name="right_sph"></td>
+            <td><input type="text" name="right_cyl"></td>
+            <td><input type="text" name="right_axis"></td>
+            <td><input type="text" name="left_sph"></td>
+            <td><input type="text" name="left_cyl"></td>
+            <td><input type="text" name="left_axis"></td>
+          </tr>
+          <tr>
+            <th>Reading</th>
+            <td><input type="text" name="right_add"></td>
+            <td colspan="2"></td>
+            <td><input type="text" name="left_add"></td>
+            <td colspan="2"></td>
+          </tr>
+        </table>
+        <label class="field-label" for="pd">PD (Pupillary Distance)</label>
+        <input class="wide" type="text" id="pd" name="pd">
+        <label class="field-label" for="notes">Notes</label>
+        <textarea id="notes" name="notes" rows="2"></textarea>
+        <button type="submit">Save Prescription</button>
+      </form>
+    </div>
+  </div>
+</body>
+</html>
